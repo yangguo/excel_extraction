@@ -27,6 +27,37 @@ def find_excel_files(directory):
     return list(directory.glob("*.xlsx"))
 
 
+def combine_row_values(df, row, start_col):
+    """
+    Combine values from multiple columns starting from start_col until a NaN value is encountered.
+    
+    Args:
+        df (DataFrame): DataFrame containing the data
+        row (int): Row index to process
+        start_col (int): Starting column index
+        
+    Returns:
+        str: Combined values as a string
+    """
+    combined_value = ""
+    col = start_col
+    num_cols = len(df.columns)
+    
+    while col < num_cols:
+        cell_value = df.iloc[row, col]
+        if pd.isna(cell_value):
+            break
+        
+        # Add a newline between values if not the first value
+        if combined_value:
+            combined_value += "\n"
+            
+        combined_value += str(cell_value)
+        col += 1
+    
+    return combined_value
+
+
 def process_sheet(df, sheet_name):
     """
     Process a single sheet from an Excel file to extract data.
@@ -44,6 +75,9 @@ def process_sheet(df, sheet_name):
     print(f"\nProcessing sheet: {sheet_name}")
     detail_rows = []
     
+    # remove spaces from sheet name
+    sheet_name = sheet_name.replace(" ", "")
+
     # Find header values (B6, D6, B8, D8) based on sheet type
     if sheet_name == 'PE-6':
         b6_value = df.iloc[7, 1] if len(df) > 7 else None
@@ -84,14 +118,16 @@ def process_sheet(df, sheet_name):
         # Check if the value is numeric (a row number)
         if not pd.isna(b_value) and isinstance(b_value, (int, float)) and b_value == int(b_value):
             c_value = df.iloc[current_row, 2]  # Column C
-            d_value = df.iloc[current_row, 3]  # Column D
+            
+            # Combine values from column D onwards until NaN is encountered
+            d_value = combine_row_values(df, current_row, 3)  # Start at column D (index 3)
             
             detail_rows.append({
                 'Sheet': sheet_name,
                 'Type': 'Detail',
                 'Number': int(b_value),
                 'Description': str(c_value) if pd.notna(c_value) else '',
-                'Details': str(d_value) if pd.notna(d_value) else '',
+                'Details': d_value if d_value else '',
                 'Control': '',
                 'Conclusion': ''
             })

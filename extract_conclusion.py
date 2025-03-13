@@ -49,12 +49,12 @@ def extract_first_sheet_data(df, max_row=47):
     max_row = min(max_row, len(df) - 1)
     
     # Extract the data for rows 12 to 48 (0-indexed: 11 to 47)
-    for row in range(11, max_row + 1):
+    for row in range(10, max_row + 1):
         row_data = {
             'No': str(df.iloc[row, 3]) if pd.notna(df.iloc[row, 3]) else '',
             'Description': str(df.iloc[row, 4]) if pd.notna(df.iloc[row, 4]) else '',
-            'HDesign': str(df.iloc[row, 7]) if pd.notna(df.iloc[row, 7]) else '',
-            'HOperation': str(df.iloc[row, 8]) if pd.notna(df.iloc[row, 9]) else ''
+            'HDesign': str(df.iloc[row, 6]) if pd.notna(df.iloc[row, 6]) else '',
+            'HOperation': str(df.iloc[row, 7]) if pd.notna(df.iloc[row, 7]) else ''
         }
         first_sheet_data.append(row_data)
     
@@ -74,6 +74,9 @@ def process_sheet(df, sheet_name):
     """
     print(f"\nProcessing sheet: {sheet_name}")
     
+    # remove spaces from sheet name
+    sheet_name = sheet_name.replace(" ", "")
+
     # Find header values based on sheet type
     if sheet_name == 'PE-6':
         d8_value = df.iloc[9, 3] if len(df) > 9 else None
@@ -163,10 +166,16 @@ def process_excel_file(input_file):
     # Process each sheet
     for sheet_name in sheet_names:
         try:
+
             df = pd.read_excel(input_file, sheet_name=sheet_name)
             sheet_data = process_sheet(df, sheet_name)
             conclusion_data.append(sheet_data)
             
+            print(f"Sheet: {sheet_name} - Extracted conclusion data")
+            
+            # remove spaces from sheet name
+            sheet_name = sheet_name.replace(" ", "")
+
             # Add additional blank rows for specific sheets
             if sheet_name in ['PE-3d', 'PE-8']:
                 conclusion_data.append({
